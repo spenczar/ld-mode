@@ -33,57 +33,74 @@
 
 (defconst ld--keywords
   '(
-    ;; 3.4.1 Setting the Entry Point
-    "ENTRY"
-    ;; 3.4.2 Commands Dealing with Files
-    "INCLUDE" "INPUT" "GROUP" "AS_NEEDED" "OUTPUT" "SEARCH_DIR" "STARTUP"
-    ;; 3.4.3 Commands Dealing with Object File Formats
-    "OUTPUT_FORMAT" "TARGET"
-    ;; 3.4.4 Assign alias names to memory regions
-    "REGION_ALIAS"
-    ;; 3.4.5 Other Linker Script Commands
-    "ASSERT" "EXTERN" "FORCE_COMMON_ALLOCATION"
-    "INHIBIT_COMMON_ALLOCATION" "INSERT" "AFTER" "BEFORE"
-    "NOCROSSREFS" "OUTPUT_ARCH" "LD_FEATURE"
-    ;; 3.5.2 PROVIDE
-    "PROVIDE"
-    ;; 3.5.3 PROVIDE_HIDDEN
-    "PROVIDE_HIDDEN"
-    ;; 3.6 SECTIONS Command
-    "SECTIONS"
-    ;; 3.6.4.2 Input Section Wildcard Patterns
-    "SORT" "SORT_BY_NAME" "SORT_BY_ALIGNMENT" "SORT_BY_INIT_PRIORITY"
-    ;; 3.6.4.3 Input Section for Common Symbols
-    "COMMON"
-    ;; 3.6.4.4 Input Section and Garbage Collection
-    "KEEP"
-    ;; 3.6.5 Output Section Data
-    "BYTE" "SHORT" "LONG" "QUAD" "SQUAD" "FILL"
-    ;; 3.6.6 Output Section Keywords
-    "CREATE_OBJECT_SYMBOLS" "CONSTRUCTORS"
-    "__CTOR_LIST__" "__CTOR_END__" "__DTOR_LIST__" "__DTOR_END__"
-    ;; 3.6.7 Output Section Discarding
-    ;; See `ld-script-font-lock-keywords'
-    ;; 3.6.8.1 Output Section Type
-    "NOLOAD" "DSECT" "COPY" "INFO" "OVERLAY"
-    ;; 3.6.8.2 Output Section LMA
-    "AT"
-    ;; 3.6.8.4 Forced Input Alignment
-    "SUBALIGN"
-    ;; 3.6.8.5 Output Section Constraint
-    "ONLY_IF_RO" "ONLY_IF_RW"
-    ;; 3.6.8.7 Output Section Phdr
     ":PHDR"
-    ;; 3.7 MEMORY Command
+    "AFTER"
+    "ASSERT"
+    "AS_NEEDED"
+    "AT"
+    "BEFORE"
+    "BYTE"
+    "COMMON"
+    "CONSTRUCTORS"
+    "COPY"
+    "CREATE_OBJECT_SYMBOLS"
+    "DSECT"
+    "ENTRY"
+    "EXTERN"
+    "FILEHDR"
+    "FILL"
+    "FLAGS"
+    "FORCE_COMMON_ALLOCATION"
+    "GROUP"
+    "INCLUDE"
+    "INFO"
+    "INHIBIT_COMMON_ALLOCATION"
+    "INPUT"
+    "INSERT"
+    "KEEP"
+    "LD_FEATURE"
+    "LONG"
     "MEMORY"
-    ;; 3.8 PHDRS Command
-    "PHDRS" "FILEHDR" "FLAGS"
-    "PT_NULL" "PT_LOAD" "PT_DYNAMIC" "PT_INTERP" "PT_NOTE" "PT_SHLIB" "PT_PHDR"
-    ;; 3.9 VERSION Command
-    "VERSION")
-  "Keywords provided in the GNU LD script language.")
+    "NOCROSSREFS"
+    "NOLOAD"
+    "ONLY_IF_RO"
+    "ONLY_IF_RW"
+    "OUTPUT"
+    "OUTPUT_ARCH"
+    "OUTPUT_FORMAT"
+    "OVERLAY"
+    "PHDRS"
+    "PROVIDE"
+    "PROVIDE_HIDDEN"
+    "PT_DYNAMIC"
+    "PT_INTERP"
+    "PT_LOAD"
+    "PT_NOTE"
+    "PT_NULL"
+    "PT_PHDR"
+    "PT_SHLIB"
+    "QUAD"
+    "REGION_ALIAS"
+    "SEARCH_DIR"
+    "SECTIONS"
+    "SHORT"
+    "SORT"
+    "SORT_BY_ALIGNMENT"
+    "SORT_BY_INIT_PRIORITY"
+    "SORT_BY_NAME"
+    "SQUAD"
+    "STARTUP"
+    "SUBALIGN"
+    "TARGET"
+    "VERSION"
+    "__CTOR_END__"
+    "__CTOR_LIST__"
+    "__DTOR_END__"
+    "__DTOR_LIST__"
+    ))
 
-(defconst ld-script-builtins
+
+(defconst ld--builtins
   '("ABSOLUTE"
     "ADDR"
     "ALIGN"
@@ -92,17 +109,20 @@
     "DATA_SEGMENT_END"
     "DATA_SEGMENT_RELRO_END"
     "DEFINED"
-    "LENGTH" "len" "l"
+    "LENGTH"
+    "len"
+    "l"
     "LOADADDR"
     "MAX"
     "MIN"
     "NEXT"
-    "ORIGIN" "org" "o"
+    "ORIGIN"
+    "org"
+    "o"
     "SEGMENT_START"
     "SIZEOF"
     "SIZEOF_HEADERS"
-    "sizeof_headers")
-  "Builtin functions of GNU ld script.")
+    "sizeof_headers"))
 
 (defconst ld--section-regexp "\\.\\w*"
   "Regular expression to match sections, which look like `.text` or `.bss`.")
@@ -124,7 +144,7 @@
 (defvar ld-font-lock-keywords
   (append
    `((,(ld--word (regexp-opt ld--keywords t)) . font-lock-keyword-face)
-     (,(ld--word (regexp-opt ld-script-builtins t)) . font-lock-builtin-face)
+     (,(ld--word (regexp-opt ld--builtins t)) . font-lock-builtin-face)
      (,ld--wildcard-section-regexp 1 font-lock-variable-name-face)
      (,ld--section-regexp . font-lock-variable-name-face)
      (,(ld--word ld--hex-address-regexp) . font-lock-constant-face)
@@ -136,8 +156,8 @@
 (defvar ld-mode-syntax-table
   (let ((st (make-syntax-table)))
     ; Comments are like /* */
-    (modify-syntax-entry ?/ ". 14" st)
-    (modify-syntax-entry ?* ". 23" st)
+    (modify-syntax-entry ?/ ". 14b" st)
+    (modify-syntax-entry ?* ". 23b" st)
     st))
 
 (defgroup ld nil
@@ -153,38 +173,37 @@
   "Is the current point within a comment?"
   (nth 8 (syntax-ppss)))
 
+(defun ld--move-to-opening-brace ()
+  "Move point to the opening enclosing brace."
+  (condition-case nil
+      (while (or (not (looking-at "{"))
+                 (ld--in-comment))
+        (backward-up-list))
+    (scan-error (goto-char (point-min)))))
+
 (defun ld--desired-indentation ()
   "Compute the desired indentation level at point."
-  ; BUG: { or } characters inside comments will confuse this
   (save-excursion
     (back-to-indentation)
-    (let ((indent-to nil))
+    (let ((started-on-close-brace (looking-at "[[:space:]]*}.*"))
+          (start-line (line-number-at-pos)))
+      (ld--move-to-opening-brace)
       (cond
-       ((bobp)
-        (setq indent-to 0))
-       ((ld--in-comment))
-       ((looking-at ".*{.*")
+       ;; If we moved to the top of the file, indent to 0
+       ((bobp) 0)
+       ;; If we didnt change lines, then we started on an opening-brace's
+       ;; line. Use the previous line's desired indentation.
+       ((= (line-number-at-pos) start-line)
         (forward-line -1)
-        (setq indent-to (current-indentation)))
-       ((looking-at ".*}.*")
-        (forward-line -1)
-        (setq indent-to (- (current-indentation) ld-mode-indent-width))))
-      (while (not indent-to)
-        (back-to-indentation)
-        (cond
-         ((bobp)
-          (setq indent-to 0))
-         ((ld--in-comment)
-          (forward-line -1))
-         ((looking-at ".*}.*")
-          (forward-line -1)
-          (setq indent-to (- (current-indentation) ld-mode-indent-width)))
-         ((looking-at ".*{.*")
-          (forward-line -1)
-          (setq indent-to (+ (current-indentation) ld-mode-indent-width)))
-         (t
-          (forward-line -1))))
-      indent-to)))
+        (ld--desired-indentation))
+       ;; If we started on a closing brace, we moved back to the opening brace;
+       ;; use the opening brace's indentation.
+       (started-on-close-brace
+        (current-indentation))
+       ;; Else, we started within a brace; use the parent's indentation + tab
+       ;; width.
+       (t (+ (current-indentation) ld-mode-indent-width))))))
+
 
 (defun ld-indent-line ()
   "Indent line of LD script."
@@ -209,6 +228,7 @@
   (set (make-local-variable 'comment-start) "/*")
   (set (make-local-variable 'comment-end) "*/")
   (set (make-local-variable 'comment-use-syntax) t)
+  (set (make-local-variable 'comment-start-skip) "/\\*+\s *")
   
   (setq major-mode 'ld-mode)
   (setq mode-name "LD2")
